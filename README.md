@@ -15,7 +15,7 @@
 | 🧑‍🔬 | **Jorge Luis Menchaca** ² | UANL |
 | 🧑‍🔬 | **Jorge M. Cruz-Duarte** ³ | Université de Lille & CNRS – CRIStAL |
 | 🧑‍🔬 | **Diana G. Zárate-Triviño** ⁴ | UANL – Laboratorio de Inmunología y Virología |
-| 🧑‍🔬 | **Juan Gabriel Avina-Cervantes** ⁵ | University of Guanajuato – IIS |
+| 🧑‍🔬 | **Juan Gabriel Avina-Cervantes** ⁵ | University of Guanajuato |
 | 🧑‍🔬 | **José Carlos Ortiz-Bayliss** ¹ | Tecnológico de Monterrey |
 
 <sup>¹ Monterrey, México ² San Nicolás de los Garza, México ³ Lille, France  
