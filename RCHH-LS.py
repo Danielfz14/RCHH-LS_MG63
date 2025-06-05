@@ -7,7 +7,6 @@ import multiprocessing
 from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
 
-# Imports de tu librería
 from customhys import benchmark_func as bf
 from customhys import metaheuristic as mh
 from ml_utils import mittag_leffler 
@@ -49,11 +48,7 @@ class P1(bf.BasicProblem):
 
 def evaluate_sequence_performance_all(sequence, prob, num_agents, num_iterations, num_replicas):
     """
-    Corre Metaheuristic(prob, sequence, ...) num_replicas veces en paralelo,
-    y retorna:
-       - fitness_vals (array con f_best de cada réplica)
-       - perf_median_iqr (mediana + iqr de fitness_vals)
-       - avg_time (tiempo promedio de ejecución)
+
     """
     def run_metaheuristic():
         start_t = time.time()
@@ -80,7 +75,7 @@ def evaluate_sequence_performance_all(sequence, prob, num_agents, num_iterations
 
 
 # ========================================================================
-# 3) Función hashable para heurísticas
+
 # ========================================================================
 
 def get_heuristic_key(h):
@@ -91,30 +86,25 @@ def get_heuristic_key(h):
 
 
 # ========================================================================
-# 4) Búsqueda local
 # ========================================================================
 
 def local_search(seq, heuristics_list, prob, num_agents, num_iterations, num_replicas):
     """
-    Retorna:
       best_seq, best_fv, best_perf, best_time,
       worst_seq, worst_fv, worst_perf, worst_time
     """
-    # 1) Evaluar la secuencia original
     fit_orig, perf_orig, time_orig = evaluate_sequence_performance_all(
         seq, prob, num_agents, num_iterations, num_replicas
     )
     all_solutions = [(seq[:], fit_orig, perf_orig, time_orig)]
     neighbors = []
 
-    # 2) SWAP (si la secuencia tiene al menos 2 heurísticas)
     if len(seq) > 1:
         seq_swap = seq[:]
         i, j = random.sample(range(len(seq)), 2)
         seq_swap[i], seq_swap[j] = seq_swap[j], seq_swap[i]
         neighbors.append(seq_swap)
 
-    # 3) REPLACE (sustituir un operador por otro aleatorio que no esté en la secuencia)
     seq_replace = seq[:]
     pos_replace = random.randint(0, len(seq) - 1)
     current_keys = set(get_heuristic_key(x) for x in seq_replace)
@@ -123,16 +113,14 @@ def local_search(seq, heuristics_list, prob, num_agents, num_iterations, num_rep
         seq_replace[pos_replace] = random.choice(candidates)
         neighbors.append(seq_replace)
 
-    # 4) Evaluar vecinos
     for nb in neighbors:
         fit_nb, perf_nb, time_nb = evaluate_sequence_performance_all(
             nb, prob, num_agents, num_iterations, num_replicas
         )
         all_solutions.append((nb, fit_nb, perf_nb, time_nb))
 
-    # 5) Best y worst global entre la original y los vecinos
-    best_tuple = min(all_solutions, key=lambda x: x[2])   # performance menor => mejor
-    worst_tuple = max(all_solutions, key=lambda x: x[2]) # performance mayor => peor
+    best_tuple = min(all_solutions, key=lambda x: x[2])   
+    worst_tuple = max(all_solutions, key=lambda x: x[2]) 
 
     (best_seq, best_fv, best_perf, best_time) = best_tuple
     (worst_seq, worst_fv, worst_perf, worst_time) = worst_tuple
@@ -156,21 +144,17 @@ def heuristic_selection(
     max_len=3
 ):
     """
-    Retorna:
       best_sequence_global, best_perf_global,
       best_fitness_history, best_perf_history, best_time_history,
       improvement_history,
       worst_sequence_global, worst_perf_global
     """
-    # Variables para llevar la mejor secuencia global:
     best_sequence_global = None
     best_perf_global = float('inf')
 
-    # Variables para llevar la peor secuencia global:
     worst_sequence_global = None
     worst_perf_global = float('-inf')
 
-    # Historiales
     best_fitness_history = []
     best_perf_history = []
     best_time_history = []
@@ -178,20 +162,17 @@ def heuristic_selection(
 
     # Bucle 
     for it in range(heuristic_selection):
-        # 1) Construcción (solución aleatoria)
         candidate_seq = build_solution_greedy_random(heuristics_list, max_len)
         fv_candidate, perf_candidate, time_candidate = evaluate_sequence_performance_all(
             candidate_seq, prob, num_agents, num_iterations, num_replicas
         )
 
-        # 2) Búsqueda local
         (best_seq_ls, best_fv_ls, best_perf_ls, best_time_ls,
          worst_seq_ls, worst_fv_ls, worst_perf_ls, worst_time_ls) = local_search(
             candidate_seq, heuristics_list, prob,
             num_agents, num_iterations, num_replicas
         )
 
-        # 3) Decidir si tomamos la secuencia del LS o la construida
         if best_perf_ls < perf_candidate:
             final_seq_it  = best_seq_ls
             final_fv_it   = best_fv_ls
@@ -203,24 +184,19 @@ def heuristic_selection(
             final_perf_it = perf_candidate
             final_time_it = time_candidate
 
-        # 4) Actualizar el mejor global
         if final_perf_it < best_perf_global:
             best_perf_global = final_perf_it
             best_sequence_global = final_seq_it[:]
-            # Registramos la mejora en la lista de mejoras
             improvement_history.append((it+1, final_fv_it, final_perf_it))
 
-        # 5) Actualizar el peor global (usamos la "peor secuencia" que salió de local_search)
         if worst_perf_ls > worst_perf_global:
             worst_perf_global = worst_perf_ls
             worst_sequence_global = worst_seq_ls[:]
 
-        # 6) Guardar históricos (del "final" de esta iteración)
         best_fitness_history.append(final_fv_it)
         best_perf_history.append(final_perf_it)
         best_time_history.append(final_time_it)
 
-        # 7) Impresión en consola (opcional)
         def get_indices(hseq):
             return [heuristics_list.index(h) for h in hseq]
 
@@ -312,7 +288,7 @@ if __name__ == "__main__":
     init_data(data_file)
 
     # Definir problema
-    min_range = [0.00001, 0.00001, 0.00001, 0.1]
+    min_range = [0.00001, 0.00001, 0.00001, 0.0001]
     max_range = [1.5, 1.5, 1.5, 1.0]
     fun = P1(variable_num=4, min_search_range=min_range, max_search_range=max_range)
     prob = fun.get_formatted_problem()
@@ -377,7 +353,7 @@ if __name__ == "__main__":
             num_iterations=80,
             num_replicas=30,
             heuristic_selection=10,
-            max_len=3
+            max_len=2
         )
 
         results_dict = {
@@ -394,5 +370,5 @@ if __name__ == "__main__":
         all_results.append(results_dict)
 
     df_results = pd.DataFrame(all_results)
-    df_results.to_csv("results_10_replicas_with_worst_3op.csv", index=False)
+    df_results.to_csv("results_op.csv", index=False)
     print(df_results)
